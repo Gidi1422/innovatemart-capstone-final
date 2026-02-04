@@ -17,7 +17,8 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 1
-      instance_types = ["t3.medium"]
+      # Changed from t3.medium to t3.small to bypass Free Tier account limits
+      instance_types = ["t3.small"] 
     }
   }
 
