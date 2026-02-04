@@ -46,13 +46,14 @@ jobs:
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # Create namespace first
+          # 1. Create the namespace
           kubectl apply -f kubernetes/namespace.yaml
 
-          # Deploy using the official EKS Workshop manifest (Installs all microservices)
-          kubectl apply -f https://raw.githubusercontent.com/aws-samples/eks-workshop-v2/main/manifests/v2/instantiate-all.yaml
+          # 2. Deploy using the verified Latest Release URL
+          # This URL points to the bundled manifest provided by the aws-containers team
+          kubectl apply -f https://github.com/aws-containers/retail-store-sample-app/releases/latest/download/kubernetes.yaml
             
-          # Requirement 4.3: Apply Developer RBAC (View Only)
+          # 3. Requirement 4.3: Apply Developer RBAC
           kubectl apply -f kubernetes/rbac-developer.yaml
 
       # Requirement 4.4: Application Logging
