@@ -8,7 +8,7 @@ resource "aws_iam_user" "dev_user" {
 
 resource "aws_iam_user_policy_attachment" "dev_readonly" {
   user       = aws_iam_user.dev_user.name
-  # FIXED: Corrected ARN with the double colon
+  # FIXED: Corrected ARN with the double colon (iam::aws)
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
