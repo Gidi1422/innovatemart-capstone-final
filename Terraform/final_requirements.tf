@@ -38,4 +38,4 @@ resource "aws_lambda_permission" "allow_s3" {
   principal     = "s3.amazonaws.com"
   # Linked to the bucket ARN defined in s3_lambda.tf
   source_arn    = aws_s3_bucket.assets.arn
-}
+}# Last Sync: Wed, Feb  4, 2026  3:46:49 PM
