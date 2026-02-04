@@ -48,7 +48,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# --- TRIGGER LOGIC (Mandatory for Section 4.5) ---
+# --- TRIGGER LOGIC ---
 
 # Allow S3 to call your Lambda function
 resource "aws_lambda_permission" "allow_bucket" {
@@ -59,14 +59,6 @@ resource "aws_lambda_permission" "allow_bucket" {
   source_arn    = aws_s3_bucket.assets.arn
 }
 
-# Configure S3 to send an event to Lambda on file upload
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.assets.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.asset_processor.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-
-  depends_on = [aws_lambda_permission.allow_bucket]
-}
+# NOTE: The aws_s3_bucket_notification block has been removed from this file 
+# because it is already defined in final_requirements.tf. 
+# This prevents the "Duplicate resource" error.

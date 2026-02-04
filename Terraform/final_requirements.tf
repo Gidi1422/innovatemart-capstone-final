@@ -8,7 +8,6 @@ resource "aws_iam_user" "dev_user" {
 
 resource "aws_iam_user_policy_attachment" "dev_readonly" {
   user       = aws_iam_user.dev_user.name
-  # FIXED: Corrected ARN with the double colon (iam::aws)
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
@@ -28,14 +27,9 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 
   # This ensures permissions exist before the notification is attached
-  depends_on = [aws_lambda_permission.allow_s3]
+  # Updated to match the resource name in s3_lambda.tf
+  depends_on = [aws_lambda_permission.allow_bucket]
 }
 
-resource "aws_lambda_permission" "allow_s3" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.asset_processor.function_name
-  principal     = "s3.amazonaws.com"
-  # Linked to the bucket ARN defined in s3_lambda.tf
-  source_arn    = aws_s3_bucket.assets.arn
-}# Last Sync: Wed, Feb  4, 2026  3:46:49 PM
+# Note: The lambda_permission is already in s3_lambda.tf, 
+# so we don't duplicate it here to avoid name conflicts.
