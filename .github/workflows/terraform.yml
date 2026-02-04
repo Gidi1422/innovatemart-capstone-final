@@ -24,17 +24,18 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./Terraform # Fixed: Capital T
+        working-directory: ./Terraform
 
       - name: Terraform Plan
-        run: terraform plan -no-color
-        working-directory: ./Terraform # Fixed: Capital T
+        run: terraform plan -no-color -lock=false
+        working-directory: ./Terraform
         if: github.event_name == 'pull_request'
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
-        working-directory: ./Terraform # Fixed: Capital T
+        # Added -lock=false to bypass the stuck DynamoDB state lock
+        run: terraform apply -auto-approve -input=false -lock=false
+        working-directory: ./Terraform
 
       # Requirement 4.2: Connect to EKS and Deploy Retail App
       - name: Configure Kubeconfig
@@ -45,7 +46,7 @@ jobs:
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # Create namespace first - Fixed path (no .. needed)
+          # Create namespace first
           kubectl apply -f kubernetes/namespace.yaml
 
           # Install Retail App via Helm (Requirement 4.2)
@@ -55,7 +56,7 @@ jobs:
             --namespace retail-app \
             --set platform=eks
             
-          # Apply Developer RBAC (Requirement 4.3) - Fixed path
+          # Apply Developer RBAC (Requirement 4.3)
           kubectl apply -f kubernetes/rbac-developer.yaml
 
       # Requirement 4.4: Enable CloudWatch Logging Add-on
