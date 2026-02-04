@@ -46,24 +46,19 @@ jobs:
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # Create namespace first
+          # 1. Create the namespace (Requirement 4.2)
           kubectl apply -f kubernetes/namespace.yaml
 
-          # Install Retail App via Helm (Requirement 4.2)
-          # FIXED: Updated to the correct GitHub Pages URL
-          helm repo add retail-store-sample-app https://aws-retail-store-sample-app.github.io/retail-store-sample-app
-          helm repo update
-
-          helm upgrade --install retail-app retail-store-sample-app/retail-store-sample-app \
-            --namespace retail-app \
-            --set platform=eks
+          # 2. Deploy the Retail App using direct manifests
+          # This replaces the broken Helm repository and installs all microservices
+          kubectl apply -f https://raw.githubusercontent.com/aws-containers/retail-store-sample-app/main/dist/kubernetes.yaml
             
-          # Apply Developer RBAC (Requirement 4.3)
+          # 3. Apply Developer RBAC (Requirement 4.3)
           kubectl apply -f kubernetes/rbac-developer.yaml
 
       # Requirement 4.4: Enable CloudWatch Logging Add-on
       - name: Enable Observability
         if: github.ref == 'refs/heads/main'
         run: |
-          # Using --force or checking if exists to prevent workflow failure if already enabled
-          aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability || echo "Addon already exists or is being updated"
+          # Ensuring the add-on is enabled for logging and metrics
+          aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability || echo "Addon already exists"
