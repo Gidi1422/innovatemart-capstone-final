@@ -4,11 +4,13 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda_function.zip"
 }
 
+# The S3 Bucket for assets
 resource "aws_s3_bucket" "assets" {
   bucket        = "bedrock-assets-soe-025-0202"
   force_destroy = true
 }
 
+# The Lambda Function
 resource "aws_lambda_function" "asset_processor" {
   filename         = data.archive_file.lambda_zip.output_path 
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -18,6 +20,7 @@ resource "aws_lambda_function" "asset_processor" {
   runtime          = "python3.9"
 }
 
+# IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "bedrock-lambda-role-soe-025-0202"
   assume_role_policy = jsonencode({
@@ -30,6 +33,7 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
+# Attach basic execution (logs) to Lambda
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
