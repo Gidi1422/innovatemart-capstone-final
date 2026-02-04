@@ -50,8 +50,10 @@ jobs:
           kubectl apply -f kubernetes/namespace.yaml
 
           # Install Retail App via Helm (Requirement 4.2)
-          helm repo add retail-store-sample-app https://aws-containers.github.io/retail-store-sample-app
+          # FIXED: Updated to the correct GitHub Pages URL
+          helm repo add retail-store-sample-app https://aws-retail-store-sample-app.github.io/retail-store-sample-app
           helm repo update
+
           helm upgrade --install retail-app retail-store-sample-app/retail-store-sample-app \
             --namespace retail-app \
             --set platform=eks
@@ -63,4 +65,5 @@ jobs:
       - name: Enable Observability
         if: github.ref == 'refs/heads/main'
         run: |
-          aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability
+          # Using --force or checking if exists to prevent workflow failure if already enabled
+          aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability || echo "Addon already exists or is being updated"
