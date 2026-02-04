@@ -20,7 +20,6 @@ module "eks" {
       min_size     = 1
       max_size     = 2
       desired_size = 1
-      # Changed from t3.medium to t3.small to bypass account limits
       instance_types = ["t3.small"] 
     }
   }
@@ -30,37 +29,21 @@ module "eks" {
   }
 }
 
-# --- ACCESS ENTRIES (The "Handshake" Fix) ---
+# --- CONSOLIDATED ACCESS ENTRIES ---
 
-# 1. Grant your local PowerShell user Admin access
-resource "aws_eks_access_entry" "local_user" {
+# We only need ONE entry for 'Valentine'. 
+# This covers BOTH your local PowerShell and GitHub Actions.
+resource "aws_eks_access_entry" "cluster_admin" {
   cluster_name      = module.eks.cluster_name
   principal_arn     = "arn:aws:iam::557690612185:user/Valentine"
   type              = "STANDARD"
 }
 
-resource "aws_eks_access_policy_association" "local_user_admin" {
+# Attach the Admin policy using the CORRECT EKS-specific ARN format
+resource "aws_eks_access_policy_association" "admin_policy" {
   cluster_name  = module.eks.cluster_name
-  policy_arn    = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
-  principal_arn = "arn:aws:iam::557690612185:user/Valentine"
-
-  access_scope {
-    type = "cluster"
-  }
-}
-
-# 2. Grant the GitHub Actions Role Admin access 
-# (This ensures the 'kubectl apply' step in your workflow works)
-resource "aws_eks_access_entry" "github_actions" {
-  cluster_name      = module.eks.cluster_name
-  # This uses the identity currently running your Terraform
-  principal_arn     = "arn:aws:iam::557690612185:user/Valentine" 
-  type              = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "github_admin" {
-  cluster_name  = module.eks.cluster_name
-  policy_arn    = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
+  # FIXED: Must use 'arn:aws:eks::aws:cluster-access-policy/...'
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
   principal_arn = "arn:aws:iam::557690612185:user/Valentine"
 
   access_scope {
