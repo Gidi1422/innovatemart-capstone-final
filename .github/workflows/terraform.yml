@@ -46,12 +46,12 @@ jobs:
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # 1. Create the namespace
+          # 1. Create the namespace (Ensure it exists)
           kubectl apply -f kubernetes/namespace.yaml
 
           # 2. Deploy using the verified Latest Release URL
-          # This URL points to the bundled manifest provided by the aws-containers team
-          kubectl apply -f https://github.com/aws-containers/retail-store-sample-app/releases/latest/download/kubernetes.yaml
+          # CRITICAL: We added "-n retail-app" to force deployment into the correct namespace
+          kubectl apply -f https://github.com/aws-containers/retail-store-sample-app/releases/latest/download/kubernetes.yaml -n retail-app
             
           # 3. Requirement 4.3: Apply Developer RBAC
           kubectl apply -f kubernetes/rbac-developer.yaml
