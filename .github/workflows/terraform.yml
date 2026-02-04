@@ -36,24 +36,26 @@ jobs:
         run: terraform apply -auto-approve -input=false -lock=false
         working-directory: ./Terraform
 
+      # Requirement 4.2: Connect to EKS
       - name: Configure Kubeconfig
         if: github.ref == 'refs/heads/main'
         run: |
           aws eks update-kubeconfig --region us-east-1 --name project-bedrock-cluster
 
+      # Requirement 4.2: Application Deployment
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # 1. Create the namespace
+          # Create namespace first
           kubectl apply -f kubernetes/namespace.yaml
 
-          # 2. Deploy using a STABLE RELEASE URL (v0.1.0) 
-          # This fixes the 404 error by avoiding the 'main' branch
-          kubectl apply -f https://raw.githubusercontent.com/aws-containers/retail-store-sample-app/v0.1.0/dist/kubernetes.yaml
+          # Deploy using the official EKS Workshop manifest (Installs all microservices)
+          kubectl apply -f https://raw.githubusercontent.com/aws-samples/eks-workshop-v2/main/manifests/v2/instantiate-all.yaml
             
-          # 3. Apply Developer RBAC
+          # Requirement 4.3: Apply Developer RBAC (View Only)
           kubectl apply -f kubernetes/rbac-developer.yaml
 
+      # Requirement 4.4: Application Logging
       - name: Enable Observability
         if: github.ref == 'refs/heads/main'
         run: |
