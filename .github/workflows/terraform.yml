@@ -1,0 +1,65 @@
+name: "Project Bedrock CI/CD"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  terraform-and-deploy:
+    name: "Terraform & App Deployment"
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: "us-east-1"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./Terraform # Fixed: Capital T
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        working-directory: ./Terraform # Fixed: Capital T
+        if: github.event_name == 'pull_request'
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
+        working-directory: ./Terraform # Fixed: Capital T
+
+      # Requirement 4.2: Connect to EKS and Deploy Retail App
+      - name: Configure Kubeconfig
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name project-bedrock-cluster
+
+      - name: Deploy Retail Store App
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Create namespace first - Fixed path (no .. needed)
+          kubectl apply -f kubernetes/namespace.yaml
+
+          # Install Retail App via Helm (Requirement 4.2)
+          helm repo add retail-store-sample-app https://aws-containers.github.io/retail-store-sample-app
+          helm repo update
+          helm upgrade --install retail-app retail-store-sample-app/retail-store-sample-app \
+            --namespace retail-app \
+            --set platform=eks
+            
+          # Apply Developer RBAC (Requirement 4.3) - Fixed path
+          kubectl apply -f kubernetes/rbac-developer.yaml
+
+      # Requirement 4.4: Enable CloudWatch Logging Add-on
+      - name: Enable Observability
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability

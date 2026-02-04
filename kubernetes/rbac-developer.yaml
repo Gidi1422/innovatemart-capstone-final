@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-view-binding
+  namespace: retail-app
+subjects:
+  - kind: User
+    name: bedrock-dev-view # This matches the IAM user we created in Terraform
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view # This is a built-in "read-only" role in Kubernetes
+  apiGroup: rbac.authorization.k8s.io
