@@ -1,7 +1,7 @@
 # 1. Mandatory Tagging (Requirement 1)
-# Note: Ensure your provider block has default_tags { tags = { Project = "Bedrock" } }
+# (Handled in provider.tf default_tags)
 
-# 2. Developer IAM User (Requirement 4.3)
+# 2. Developer IAM User & Keys (Requirement 4.3)
 resource "aws_iam_user" "dev_user" {
   name = "bedrock-dev-view"
 }
@@ -11,9 +11,14 @@ resource "aws_iam_user_policy_attachment" "dev_readonly" {
   policy_arn = "arn:aws:iam:aws:policy/ReadOnlyAccess"
 }
 
+# This generates the keys for your grading.json and Google Doc
+resource "aws_iam_access_key" "dev_key" {
+  user = aws_iam_user.dev_user.name
+}
+
 # 3. S3 Bucket Trigger for Lambda (Requirement 4.5)
 resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = "bedrock-assets-soe-025-0202" # Double check your ID matches
+  bucket = "bedrock-assets-soe-025-0202" 
 
   lambda_function {
     lambda_function_arn = aws_lambda_function.asset_processor.arn
