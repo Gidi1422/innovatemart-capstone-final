@@ -33,11 +33,9 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        # Added -lock=false to bypass the stuck DynamoDB state lock
         run: terraform apply -auto-approve -input=false -lock=false
         working-directory: ./Terraform
 
-      # Requirement 4.2: Connect to EKS and Deploy Retail App
       - name: Configure Kubeconfig
         if: github.ref == 'refs/heads/main'
         run: |
@@ -46,19 +44,17 @@ jobs:
       - name: Deploy Retail Store App
         if: github.ref == 'refs/heads/main'
         run: |
-          # 1. Create the namespace (Requirement 4.2)
+          # 1. Create the namespace
           kubectl apply -f kubernetes/namespace.yaml
 
-          # 2. Deploy the Retail App using direct manifests
-          # This replaces the broken Helm repository and installs all microservices
-          kubectl apply -f https://raw.githubusercontent.com/aws-containers/retail-store-sample-app/main/dist/kubernetes.yaml
+          # 2. Deploy using a STABLE RELEASE URL (v0.1.0) 
+          # This fixes the 404 error by avoiding the 'main' branch
+          kubectl apply -f https://raw.githubusercontent.com/aws-containers/retail-store-sample-app/v0.1.0/dist/kubernetes.yaml
             
-          # 3. Apply Developer RBAC (Requirement 4.3)
+          # 3. Apply Developer RBAC
           kubectl apply -f kubernetes/rbac-developer.yaml
 
-      # Requirement 4.4: Enable CloudWatch Logging Add-on
       - name: Enable Observability
         if: github.ref == 'refs/heads/main'
         run: |
-          # Ensuring the add-on is enabled for logging and metrics
           aws eks create-addon --cluster-name project-bedrock-cluster --addon-name amazon-cloudwatch-observability || echo "Addon already exists"
