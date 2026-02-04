@@ -1,28 +1,39 @@
+# 1. Manually define the Subnet Group to ensure it exists
+resource "aws_db_subnet_group" "bedrock_db_subnets" {
+  name       = "bedrock-database-subnet-group"
+  subnet_ids = module.vpc.private_subnets # Connects to the private subnets from your VPC
+
+  tags = {
+    Project = "Bedrock"
+  }
+}
+
+# 2. Updated RDS Instance
 resource "aws_db_instance" "catalog" {
   allocated_storage      = 20
-  engine                 = "mysql"        # Changed to MySQL for Catalog Service (Req 5.1)
-  engine_version         = "8.0"          # Standard MySQL version
+  engine                 = "mysql"
+  engine_version         = "8.0"
   instance_class         = "db.t3.micro"
   db_name                = "catalogdb"
   username               = "dbadmin"
   password               = "BedrockPass123!" 
   skip_final_snapshot    = true
   
-  # Links the DB to your private VPC subnets
-  db_subnet_group_name   = module.vpc.database_subnet_group_name
+  # Reference the new subnet group created above
+  db_subnet_group_name   = aws_db_subnet_group.bedrock_db_subnets.name
+  
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   
-  # Required Project Tag
   tags = { 
     Project = "Bedrock" 
   }
 }
 
+# 3. Security Group (No changes needed, but included for completeness)
 resource "aws_security_group" "rds_sg" {
   name   = "project-bedrock-rds-sg"
   vpc_id = module.vpc.vpc_id
 
-  # Ingress: Allows access on MySQL port 3306 from within the VPC
   ingress {
     from_port   = 3306
     to_port     = 3306
@@ -30,7 +41,6 @@ resource "aws_security_group" "rds_sg" {
     cidr_blocks = [module.vpc.vpc_cidr_block]
   }
 
-  # Egress: Standard outbound allow-all
   egress {
     from_port   = 0
     to_port     = 0
