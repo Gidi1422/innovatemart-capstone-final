@@ -18,8 +18,11 @@ module "eks" {
   eks_managed_node_groups = {
     main = {
       min_size     = 1
-      max_size     = 2
-      desired_size = 1
+      max_size     = 4
+      # FIXED: Using 3 nodes to solve the "Insufficient memory" and "Too many pods" errors
+      desired_size = 3 
+      
+      # FIXED: Staying with t3.small to avoid the vCPU Quota error we saw before
       instance_types = ["t3.small"] 
     }
   }
@@ -31,18 +34,14 @@ module "eks" {
 
 # --- CONSOLIDATED ACCESS ENTRIES ---
 
-# We only need ONE entry for 'Valentine'. 
-# This covers BOTH your local PowerShell and GitHub Actions.
 resource "aws_eks_access_entry" "cluster_admin" {
   cluster_name      = module.eks.cluster_name
   principal_arn     = "arn:aws:iam::557690612185:user/Valentine"
   type              = "STANDARD"
 }
 
-# Attach the Admin policy using the CORRECT EKS-specific ARN format
 resource "aws_eks_access_policy_association" "admin_policy" {
   cluster_name  = module.eks.cluster_name
-  # FIXED: Must use 'arn:aws:eks::aws:cluster-access-policy/...'
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
   principal_arn = "arn:aws:iam::557690612185:user/Valentine"
 
