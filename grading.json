@@ -1,1 +1,42 @@
-{}
+{
+  "assets_bucket_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "bedrock-assets-soe-025-0202"
+  },
+  "cluster_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "https://99E601438914D27780FA4448D8F59935.gr7.us-east-1.eks.amazonaws.com"
+  },
+  "cluster_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "project-bedrock-cluster"
+  },
+  "dev_viewer_access_key": {
+    "sensitive": false,
+    "type": "string",
+    "value": "AKIAYDWHTNHMVIU4KXWR"
+  },
+  "dev_viewer_secret_key": {
+    "sensitive": true,
+    "type": "string",
+    "value": "VqsrZBBxVX8qltHt3iY0Tquj/zdTco45lRzKpY84"
+  },
+  "rds_catalog_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "terraform-20260204214458462000000001.c0lic6gw6v13.us-east-1.rds.amazonaws.com:3306"
+  },
+  "region": {
+    "sensitive": false,
+    "type": "string",
+    "value": "us-east-1"
+  },
+  "vpc_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "vpc-03f0a49389ff26e81"
+  }
+}
