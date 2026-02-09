@@ -9,43 +9,45 @@ module "eks" {
   subnet_ids                     = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
-  # REQUIRED: This allows the Access Entry resources below to work
+  # Enables the new EKS Access Entry API
   authentication_mode = "API_AND_CONFIG_MAP"
 
-  # Requirement 4.4: Control Plane Logging
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  # REDUNDANT LINE REMOVED: enable_cluster_creator_admin_permissions 
+  # This was causing the "ResourceInUse" 409 error.
+
+  access_entries = {
+    valentine_user = {
+      principal_arn     = "arn:aws:iam::557690612185:user/Valentine"
+      type              = "STANDARD"
+
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
 
   eks_managed_node_groups = {
     main = {
       min_size     = 1
       max_size     = 4
-      # FIXED: Using 3 nodes to solve the "Insufficient memory" and "Too many pods" errors
       desired_size = 3 
       
-      # FIXED: Staying with t3.small to avoid the vCPU Quota error we saw before
-      instance_types = ["t3.small"] 
+      instance_types = ["t3.small"]
+
+      tags = {
+        ScalingUpdate = "Force-to-3"
+      }
     }
   }
 
   tags = {
     Project = "Bedrock"
-  }
-}
-
-# --- CONSOLIDATED ACCESS ENTRIES ---
-
-resource "aws_eks_access_entry" "cluster_admin" {
-  cluster_name      = module.eks.cluster_name
-  principal_arn     = "arn:aws:iam::557690612185:user/Valentine"
-  type              = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "admin_policy" {
-  cluster_name  = module.eks.cluster_name
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-  principal_arn = "arn:aws:iam::557690612185:user/Valentine"
-
-  access_scope {
-    type = "cluster"
   }
 }
