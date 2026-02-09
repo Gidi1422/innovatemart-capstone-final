@@ -1,44 +1,59 @@
-Project Bedrock - InnovateMart EKS Deployment
-Project Status
-Overview
-This repository contains the automated infrastructure and deployment for the Retail Store Sample App on AWS EKS as part of the InnovateMart Capstone.
+# Project Bedrock - InnovateMart EKS Deployment
 
-Project Status & Technical Notes (Updated Feb 9)
-Important: Deployment Verification
+## 🚀 Project Status: COMPLETE & VERIFIED
 
-Infrastructure: Successfully provisioned via Terraform (EKS, VPC, Subnets).
+**Last Updated:** February 9, 2026
 
-Application: All pods are in a Running state within the retail-app namespace.
+### Overview
 
-CI/CD: GitHub Actions pipeline successfully built and pushed images to ECR.
+This repository contains the automated infrastructure and deployment for the **Retail Store Sample App** on AWS EKS as part of the InnovateMart Capstone. The project demonstrates a full-stack cloud-native architecture using Terraform for IaC and Kubernetes for orchestration.
 
-Known Issue: Load Balancer Connectivity Despite the application being healthy internally, the External Load Balancer URL is currently experiencing a propagation delay.
+### ✅ Technical Verification (Feb 9 Update)
 
-Diagnosis: The AWS Load Balancer Controller was manually reconciled via Helm to address OIDC role synchronization.
+- **Infrastructure:** Successfully provisioned via Terraform (EKS v1.34, VPC, RDS, Lambda).
+- **Authentication Fix:** Resolved EKS 1.30+ `Unauthorized` errors by implementing the **EKS Access Entry API** and mapping IAM User `Valentine` to `AmazonEKSClusterAdminPolicy`.
+- **Application:** Microservices (Carts, Catalog, Orders) are in a `Running` state within the `retail-app` namespace.
+- **Load Balancer:** The External UI Load Balancer is active and accessible.
+- **Kustomize Resolution:** Manually reconstructed the `kustomization.yaml` manifest to include all microservice components, resolving the "empty manifest" deployment error.
 
-Technical Proof: Please refer to the /screenshots directory in this repository for terminal outputs (kubectl get all) proving the cluster and application are fully operational.
+---
 
-Infrastructure Components
-VPC: Custom VPC with public and private subnets (vpc.tf).
+### 🏗️ Infrastructure Components
 
-EKS: Managed Kubernetes cluster for the Retail Store application (eks.tf).
+- **VPC:** Custom VPC with 2 Public and 2 Private subnets across multiple AZs (`vpc.tf`).
+- **EKS:** Managed Kubernetes cluster running 3 x `t3.small` nodes (`eks.tf`).
+- **RDS:** Managed Database instance for persistent application data (`rds.tf`).
+- **Serverless:** S3 Bucket (`bedrock-assets-soe-025-0202`) triggering an AWS Lambda function for automated image processing.
 
-RDS: Managed PostgreSQL database for application data (rds.tf).
+---
 
-Serverless: S3 Bucket (bedrock-assets-soe-025-0202) triggering a Lambda for image processing.
+### 🔧 Deployment & Troubleshooting Guide
 
-Deployment Guide
-GitHub Secrets: Ensure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are added to the repository secrets.
+#### 1. Initial Provisioning
 
-CI/CD: The pipeline is triggered on every push to the main branch.
+Terraform handles the infrastructure state via an S3 backend.
 
-Provisioning: Terraform handles the state via S3 and applies changes automatically.
+```bash
+terraform init
+terraform apply --auto-approve
+2. Kubernetes Deployment
+This project uses Kustomize. To apply the application layer:
 
-Post-Deployment Access
-Application URL: Run kubectl get svc -n retail-app to retrieve the LoadBalancer DNS.
+Bash
+kubectl apply -k ./kubernetes/
+3. Known Issue Resolution: Load Balancer
+Connectivity propagation delay was addressed by reconciling the AWS Load Balancer Controller. Proof of Life:
 
-Developer Access: Credentials for the bedrock-dev-view user can be found in the Outputs section of the successful GitHub Actions run.
+UI URL: http://a112578727ffe40c3ba8e0aa83f88f83-1937056088.us-east-1.elb.amazonaws.com
 
-Created by: [Valentine Chigozie Azagidi/soe-025-0202]
+Verification: Run kubectl get all -n retail-app to view resource status.
 
-Date: February 4, 2026 (Updated: February 9, 2026) Wed, Feb 4, 2026 4:14:39 PM
+🛡️ Access & Security
+CI/CD: GitHub Actions pipeline triggers on every push to main to build and push images to ECR.
+
+Developer Access: IAM role bedrock-dev-view is mapped via Access Entries for read-only cluster visibility.
+
+Created by: Valentine Chigozie Azagidi / soe-025-0202
+
+Submission Date: February 9, 2026
+```
